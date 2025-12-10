@@ -1,0 +1,77 @@
+substitutions:
+  device_name: water-meter-cam
+
+esphome:
+  name: ${device_name}
+
+esp32:
+  variant: esp32
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+
+# https://esphome.io/components/button/index.html
+button:
+  # https://esphome.io/components/button/restart.html
+  - platform: restart
+    name: Restart
+
+i2c:
+  sda: GPIO26
+  scl: GPIO27
+  id: i2c_bus
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+esp32_camera:
+  name: ov2640
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_id: i2c_bus
+  # the order of the data_pins is significant, don't mix up the order
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 800x600
+  jpeg_quality: 10
+  max_framerate: 0.4fps
+  idle_framerate: 0.1fps
+  vertical_flip: False
+  horizontal_mirror: False
+
+output:
+  - platform: ledc
+    pin: GPIO4
+    channel: 2 # channel 1 is used for esp32_camera
+    id: flashlight
+
+light:
+  - platform: monochromatic
+    output: flashlight
+    name: Flashlight
+
+status_led:
+  pin:
+    number: GPIO33
+    inverted: true
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+    entity_category: diagnostic

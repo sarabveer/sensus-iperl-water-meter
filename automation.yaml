@@ -1,0 +1,50 @@
+alias: Water Meter Snapshot
+triggers:
+  - trigger: time_pattern
+    minutes: /3
+conditions: []
+actions:
+  - action: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 50
+    target:
+      entity_id: light.water_meter_cam_flashlight
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+      milliseconds: 0
+  - action: homeassistant.update_entity
+    metadata: {}
+    data:
+      entity_id:
+        - camera.water_meter_cam_ov2640
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+    enabled: true
+  - action: camera.snapshot
+    metadata: {}
+    data:
+      filename: /config/www/water_meter_snapshot.jpg
+    target:
+      entity_id: camera.water_meter_cam_ov2640
+  - action: shell_command.water_meter_snapshot_ocr
+    metadata: {}
+    data: {}
+    response_variable: magick_result
+  - action: homeassistant.update_entity
+    metadata: {}
+    data:
+      entity_id:
+        - sensor.water_meter_usage
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.water_meter_cam_flashlight
+    enabled: true
+mode: single
