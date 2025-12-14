@@ -6,41 +6,58 @@ shell_command:
 command_line:
   # Water Meter OCR
   - sensor:
-      name: water_meter_usage
-      unique_id: water_meter_usage
-      state_class: total_increasing
-      unit_of_measurement: ft³
-      device_class: water
-      icon: mdi:gauge
+      name: water_meter_usage_raw
       command: "/bin/bash /config/scripts/ssocr.sh"
       availability: "{{ (value | string) | trim | regex_match('^\\d{9}$') }}"
       value_template: >
+        {# Convert to ft³ (XXXYYYZZZ -> XXXYYY.ZZZ) #}
         {% set raw = (value | string) | trim %}
-        {# Must be exactly 9 digits from ssocr #}
-        {% if not raw | regex_match('^\\d{9}$') %}
-          {{ none }}
-        {% else %}
-          {# Convert to ft³ (XXXYYYZZZ -> XXXYYY.ZZZ) #}
-          {% set candidate = (raw | int) / 1000 %}
-          {# Reject obviously too-small overall readings (< 990 CCF = 99,000 ft³) #}
-          {% if candidate < 99000 %}
-            {{ none }}
-          {% else %}
-            {% set prev_state = states('sensor.water_meter_usage') %}
-            {% if is_number(prev_state) %}
-              {% set prev = prev_state | float %}
-              {# Max allowed jump in ft³ per reading to avoid crazy OCR spikes #}
-              {% set max_jump = 10 %}  {# ~75 gallons; adjust if needed #}
-              {% set delta = candidate - prev %}
-              {# Enforce: no going backwards, no huge jumps #}
-              {% if 0 <= delta <= max_jump %}
-                {{ candidate }}
-              {% else %}
-                {{ none }}
-              {% endif %}
+        {{ (raw | int) / 1000 }}
+
+template:
+  - sensor:
+      # Water Meter Total Usage
+      - name: water_meter_usage
+        unique_id: water_meter_usage
+        state_class: total_increasing
+        unit_of_measurement: ft³
+        device_class: water
+        icon: mdi:gauge
+        state: >
+          {% set candidate_state = states('sensor.water_meter_usage_raw') %}
+          {% set prev_state = this.state %}
+
+          {# 1) If we already have a good value, default to holding it #}
+          {% if is_number(prev_state) %}
+            {% set prev = prev_state | float %}
+
+            {# Candidate must be numeric #}
+            {% if not is_number(candidate_state) %}
+              {{ prev }}
             {% else %}
-              {# First valid reading: accept after basic sanity checks #}
-              {{ candidate }}
+              {% set candidate = candidate_state | float %}
+
+              {# Basic sanity #}
+              {% if candidate < 99000 %}
+                {{ prev }}
+              {% else %}
+                {% set delta = candidate - prev %}
+                {% set max_jump = 10 %}
+
+                {# Accept only monotonic + not crazy jump #}
+                {% if 0 <= delta <= max_jump %}
+                  {{ candidate }}
+                {% else %}
+                  {{ prev }}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+
+          {# 2) Not initialized yet (unknown/unavailable/etc.): allow ONE good seed value #}
+          {% else %}
+            {% if is_number(candidate_state) and (candidate_state | float) >= 99000 %}
+              {{ candidate_state | float }}
+            {% else %}
+              {{ prev_state }}
             {% endif %}
           {% endif %}
-        {% endif %}

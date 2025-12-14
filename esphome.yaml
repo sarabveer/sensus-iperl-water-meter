@@ -18,6 +18,7 @@ api:
 ota:
   - platform: esphome
 
+# UPDATE WITH YOUR WIFI CREDENTIALS
 wifi:
 
 # https://esphome.io/components/button/index.html

@@ -184,7 +184,7 @@ Adjust paths in the scripts and configuration files if your setup differs.
 - **Image preprocessing**:
   - You can tweak the `-lat` and thresholding settings for different lighting conditions.
 - **ssocr options**:
-  - `-d 9-11` assumes a specific digit arrangement and number.
+  - `-d 9-10` assumes a specific digit arrangement and number.
   - Adjust for your meter if the digit count or layout is different.
 - **Sanity checks** (in `config.yaml`):
   - `max_jump` (default 10 ft³ per reading) can be increased/decreased depending on your typical usage.

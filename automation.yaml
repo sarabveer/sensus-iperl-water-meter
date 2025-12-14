@@ -40,7 +40,7 @@ actions:
     metadata: {}
     data:
       entity_id:
-        - sensor.water_meter_usage
+        - sensor.water_meter_usage_raw
   - action: light.turn_off
     metadata: {}
     data: {}
