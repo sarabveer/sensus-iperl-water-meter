@@ -29,7 +29,7 @@ actions:
   - action: camera.snapshot
     metadata: {}
     data:
-      filename: /config/www/water_meter_snapshot.jpg
+      filename: /media/water_meter/snapshot.jpg
     target:
       entity_id: camera.water_meter_cam_ov2640
   - action: shell_command.water_meter_snapshot_ocr

@@ -2,4 +2,4 @@
 
 set -e
 
-exec ssocr -d 9-10 -C -c decimal /config/www/water_meter_ssocr.png
+exec ssocr -d 9-10 -C -c decimal /media/water_meter/ssocr.png

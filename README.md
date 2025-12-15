@@ -44,11 +44,11 @@ You will need to fine‑tune camera distance, focus, and rotation for your parti
 2. A Home Assistant automation (`automation.yaml`) runs every few minutes:
    - Turns on the flashlight
    - Waits for the image to stabilize
-   - Refreshes the camera entity and saves a snapshot to `/config/www/water_meter_snapshot.jpg`
+   - Refreshes the camera entity and saves a snapshot to `/media/water_meter/snapshot.jpg`
    - Calls a shell command that:
      - Uses ImageMagick to locate a template image of the digits within the snapshot
      - Crops that region and heavily preprocesses it for OCR
-     - Writes the result to `/config/www/water_meter_ssocr.png`
+     - Writes the result to `/media/water_meter/ssocr.png`
    - Triggers an update of `sensor.water_meter_usage`
 3. A command‑line sensor (`config.yaml`) runs `ssocr` over `water_meter_ssocr.png`, returning 9 digits.
 4. A Jinja2 template converts those digits into a total ft³ reading and applies sanity checks before updating the sensor.
@@ -110,7 +110,7 @@ The file `automation.yaml` defines an automation that:
 - Turns on the ESP32‑CAM LED (`light.water_meter_cam_flashlight`)
 - Waits 10 seconds
 - Forces an update of `camera.water_meter_cam_ov2640`
-- Saves a snapshot to `/config/www/water_meter_snapshot.jpg`
+- Saves a snapshot to `/media/water_meter/snapshot.jpg`
 - Calls `shell_command.water_meter_snapshot_ocr`
 - Updates `sensor.water_meter_usage`
 - Turns the flashlight back off
@@ -123,27 +123,27 @@ The file `automation.yaml` defines an automation that:
 
 - Ensures ImageMagick (`magick`) is installed (installs via `apk` if missing)
 - Uses `compare -metric RMSE -subimage-search` to locate a template image within the latest snapshot:
-  - Snapshot: `/config/www/water_meter_snapshot.jpg`
-  - Template: `/config/www/water_meter_template.png`
+  - Snapshot: `/media/water_meter/snapshot.jpg`
+  - Template: `/media/water_meter/template.png`
 - Extracts the best match coordinates `(x, y)` from `compare` output
 - Crops a `270x52` region around that match and applies preprocessing:
   - Convert to grayscale
   - Auto‑level
   - Local adaptive thresholding
   - Binarization
-- Writes the processed image to `/config/www/water_meter_ssocr.png`
+- Writes the processed image to `/media/water_meter/ssocr.png`
 
 You must provide `water_meter_template.png`:
 
-1. Make sure that snapshot is available on your Home Assistant instance (for example at `/config/www/water_meter_snapshot.jpg`).
-2. From a shell on the same system (HA Terminal & SSH add‑on, host shell, etc.), run ImageMagick to crop a `270x52` region around the digits, e.g.:
+1. Make sure that snapshot is available on your Home Assistant instance (for example at `/media/water_meter/snapshot.jpg`).
+2. From a shell on the same system (HA Terminal & SSH add‑on, Docker container shell, etc.), run ImageMagick to crop a `270x52` region around the digits, e.g.:
 
    ```bash
-   magick /config/www/water_meter_snapshot.jpg -crop 270x52+X+Y +repage /config/www/water_meter_template.png
+   magick /media/water_meter/snapshot.jpg -crop 270x52+X+Y +repage /media/water_meter/template.png
    ```
 
    Replace `X` and `Y` with offsets that place the `270x52` crop tightly over the digit area (you can refine them by trial and error or by inspecting the snapshot in an image viewer).
-3. Confirm that `/config/www/water_meter_template.png` exists and clearly shows only the digit section; if template matching is unreliable, re‑run the crop with slightly adjusted `X`/`Y` or a better snapshot.
+3. Confirm that `/media/water_meter/template.png` exists and clearly shows only the digit section; if template matching is unreliable, re‑run the crop with slightly adjusted `X`/`Y` or a better snapshot.
 
 ### ssocr
 
@@ -171,9 +171,9 @@ You must provide `water_meter_template.png`:
   - `ssocr`: already included with Home Assistant; for best results, use a Home Assistant version that bundles `ssocr` > 1.25 (for example Home Assistant 2025.12 or later). On older systems, ensure a recent `ssocr` is installed in the environment that runs these shell commands.
 
 - Paths:
-  - Snapshot: `/config/www/water_meter_snapshot.jpg`
-  - Template: `/config/www/water_meter_template.png`
-  - Processed OCR image: `/config/www/water_meter_ssocr.png`
+  - Snapshot: `/media/water_meter/snapshot.jpg`
+  - Template: `/media/water_meter/template.png`
+  - Processed OCR image: `/media/water_meter/ssocr.png`
 
 Adjust paths in the scripts and configuration files if your setup differs.
 

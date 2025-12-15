@@ -7,9 +7,9 @@ if ! command -v magick >/dev/null 2>&1; then
   apk add --no-cache imagemagick
 fi
 
-SNAP="/config/www/water_meter_snapshot.jpg"
-TEMPLATE="/config/www/water_meter_template.png"
-WORK="/config/www/water_meter_ssocr.png"
+SNAP="/media/water_meter/snapshot.jpg"
+TEMPLATE="/media/water_meter/template.png"
+WORK="/media/water_meter/ssocr.png"
 
 # 1. Find where the template appears in the current snapshot
 #    compare returns 1 when images differ, which is normal for us,
